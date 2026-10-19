@@ -9,7 +9,7 @@ No API keys, no uploads — everything runs locally. Selection is read via the o
 ### Compress Images (file-manager selection)
 
 1. Select image files in Finder (macOS) or File Explorer (Windows).
-2. Run **Compress Images** (optionally type a `quality` argument after the command for a one-shot override).
+2. Run **Compress Images** (optional arguments: `quality` and `format` for a one-shot override, e.g. `75 webp`).
 3. Each file is resized (if larger than Max Dimension) and recompressed; a HUD shows the total savings, e.g. `3 files: 4.2MB → 890KB (-79%)`.
 
 ### Resize Images (form)
@@ -17,21 +17,22 @@ No API keys, no uploads — everything runs locally. Selection is read via the o
 One form for everything the picker-based workflow needs: exact-size output for platform cover slots, or plain compression.
 
 1. The form is prefilled with your current selection (or pick files manually).
-2. Choose a preset — blog OG cover `1200×630`, blog cover `1600×900` (Retina) / `1200×675` (lean), content width `1600`; Xiaohongshu 3:4 `1080×1440` / square `1080×1080`; WeChat head cover `900×383` / thumbnail `200×200` / body width `1080` — or `Compress Only` (no resize, longest-side cap applies, files get the `-min` suffix) or `Custom Size…` (`1080x1440`, `1080x`).
-3. Pick a fit mode: **cover** (fill the box, center-crop to the exact size), **fit** (shrink inside the box, whole image kept), or **scale** (resize by one side).
-4. Output names carry the final size, e.g. `photo-1080x1440.jpg`.
+2. Pick the **Output Format** — `Keep` (same format as source) or convert to `JPEG` / `PNG` / `WebP` / `AVIF`.
+3. Choose a preset — blog OG cover `1200×630`, blog cover `1600×900` (Retina) / `1200×675` (lean), content width `1600`; Xiaohongshu 3:4 `1080×1440` / square `1080×1080`; WeChat head cover `900×383` / thumbnail `200×200` / body width `1080` — or `Compress Only` (no resize, longest-side cap applies, files get the `-min` suffix) or `Custom Size…` (`1080x1440`, `1080x`).
+4. Pick a fit mode: **cover** (fill the box, center-crop to the exact size), **fit** (shrink inside the box, whole image kept), or **scale** (resize by one side).
+5. Output names carry the final size, e.g. `photo-1080x1440.jpg`.
 
 Images are never upscaled: sources too small to fill a `cover` target are kept whole (fit) and reported (`N smaller than preset`).
 
 ## Remembered settings
 
-Every run remembers the parameters it used (quality, max dimension, last preset / size / fit mode) and they become the defaults for the next run — forms open pre-filled with your last values. Output format and output mode live in the extension preferences; the optional `quality` launch argument on **Compress Images** is a one-shot override that also gets remembered.
+Every run remembers the parameters it used (output format, quality, max dimension, last preset / size / fit mode) and they become the defaults for the next run — forms open pre-filled with your last values. The optional `quality` / `format` launch arguments on **Compress Images** are one-shot overrides that also get remembered; output mode lives in the extension preferences.
 
 ## Preferences
 
 | Preference | Default | Description |
 | --- | --- | --- |
-| Output Format | Keep | `Keep` (recompress in-place format), `JPEG`, `WebP`, `AVIF`, `PNG` |
+| Output Format | Keep | `Keep` (recompress in-place format), `JPEG`, `WebP`, `AVIF`, `PNG` — initial default; per-run overrides are remembered |
 | Quality | 75 | Encoder quality 0–100. For PNG it maps to palette size: below 100 quantizes to fewer colors, 100 = lossless |
 | Max Dimension | 2000 | Longest side cap; images are only ever scaled **down** (0 = no resize) |
 | Output Mode | Suffix | `Suffix` writes `<name>-min.<ext>`, `Replace` overwrites in place (skips if no gain), `Clipboard` copies the result |

@@ -8,12 +8,20 @@ import { useEffect, useState, type ReactElement } from "react";
 import { mkdir, rm } from "node:fs/promises";
 import { join, dirname, basename } from "node:path";
 import { randomUUID } from "node:crypto";
-import { compressFile, fmtKB, fmtPercent, type CompressOptions, type FileResult } from "./lib/pipeline.js";
+import { compressFile, fmtKB, fmtPercent, type CompressOptions, type FileResult, type TargetFormat } from "./lib/pipeline.js";
 import { PRESETS, parseSize } from "./lib/presets.js";
 import type { ResizeMode, ResizeSpec } from "./lib/imageops.js";
 import { getSettings, lastResizeState, rememberCompress, rememberResize } from "./lib/settings.js";
 
 const IMG_RE = /\.(jpe?g|png|webp|avif)$/i;
+
+const FORMAT_ITEMS: Array<{ value: TargetFormat; title: string }> = [
+  { value: "keep", title: "Keep — Same Format as Source" },
+  { value: "jpeg", title: "JPEG" },
+  { value: "png", title: "PNG" },
+  { value: "webp", title: "WebP" },
+  { value: "avif", title: "AVIF" },
+];
 
 export default function Command(): ReactElement {
   const settings = getSettings();
@@ -22,6 +30,7 @@ export default function Command(): ReactElement {
   const [preset, setPreset] = useState(last.preset);
   const [mode, setMode] = useState<ResizeMode>(last.mode);
   const [size, setSize] = useState(last.size);
+  const [format, setFormat] = useState<TargetFormat>(settings.format);
   const [quality, setQuality] = useState(String(settings.quality));
   const [maxDim, setMaxDim] = useState(String(settings.maxDim));
 
@@ -64,7 +73,7 @@ export default function Command(): ReactElement {
     }
     const md = compressOnly ? Math.max(0, Number.parseInt(maxDim, 10) || 0) : 0;
     const opts: CompressOptions = {
-      format: settings.format,
+      format,
       quality: q,
       maxDim: md,
       output: settings.output,
@@ -90,8 +99,8 @@ export default function Command(): ReactElement {
       for (const r of ok) if (r.output) await Clipboard.copy({ file: r.output });
     }
     if (ok.length > 0) {
-      if (compressOnly) rememberCompress(q, md);
-      else rememberResize(preset, size, mode, q);
+      if (compressOnly) rememberCompress(format, q, md);
+      else rememberResize(preset, size, mode, format, q);
     }
     await rm(tmpDir, { recursive: true, force: true });
     toast.hide();
@@ -184,6 +193,11 @@ export default function Command(): ReactElement {
           </Form.Dropdown>
         </>
       )}
+      <Form.Dropdown id="format" title="Output Format" value={format} onChange={(v) => setFormat(v as TargetFormat)}>
+        {FORMAT_ITEMS.map((f) => (
+          <Form.Dropdown.Item key={f.value} value={f.value} title={f.title} />
+        ))}
+      </Form.Dropdown>
       <Form.TextField id="quality" title="Quality (1-100)" value={quality} onChange={setQuality} />
     </Form>
   );

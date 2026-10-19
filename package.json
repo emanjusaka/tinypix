@@ -37,12 +37,18 @@
       "name": "compress-images",
       "title": "Compress Images",
       "subtitle": "TinyPix",
-      "description": "Resize + compress images selected in Finder or File Explorer (quality arg optional; settings are remembered from last run)",
+      "description": "Resize + compress images selected in Finder or File Explorer (quality / format args optional, e.g. \"75 webp\"; settings are remembered from last run)",
       "mode": "no-view",
       "arguments": [
         {
           "name": "quality",
           "placeholder": "Quality (0-100)",
+          "type": "text",
+          "optional": true
+        },
+        {
+          "name": "format",
+          "placeholder": "Format (keep/jpeg/png/webp/avif)",
           "type": "text",
           "optional": true
         }

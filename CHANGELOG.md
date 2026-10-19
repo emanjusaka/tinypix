@@ -3,6 +3,7 @@
 ## [Initial Release] - {PR_MERGE_DATE}
 
 - Compress images fully offline with Squoosh wasm codecs (MozJPEG, OxiPNG, WebP, AVIF)
+- Format conversion on the fly: `format` launch argument on Compress Images (e.g. `75 webp`) and an Output Format dropdown on the Resize Images form; last-used format is remembered
 - Lossy PNG mode: quality < 100 quantizes to a color palette (UPNG quantizer, no dithering) before OxiPNG; quality = 100 stays lossless
 - `Compress Images` command operates on the current Finder / File Explorer selection, with an optional `quality` launch argument
 - `Resize Images` command with platform presets (Blog / Xiaohongshu / WeChat), custom size, and cover / fit / scale modes

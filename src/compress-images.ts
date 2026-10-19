@@ -1,7 +1,8 @@
 /**
  * Compress Images — no-view command operating on the current file-manager selection
  * (Finder on macOS, File Explorer on Windows).
- * Optional one-shot argument: <quality> (also remembered as last-used).
+ * Optional one-shot arguments: <quality> [format] (also remembered as last-used).
+ *   e.g. "Compress Images 75 webp" — quality 75, converted to WebP.
  */
 import {
   environment,
@@ -15,19 +16,20 @@ import { mkdir, rm } from "node:fs/promises";
 import { join, dirname, basename } from "node:path";
 import { randomUUID } from "node:crypto";
 import { compressFile, fmtKB, fmtPercent, type CompressOptions, type FileResult } from "./lib/pipeline.js";
-import { getSettings, rememberCompress } from "./lib/settings.js";
+import { getSettings, normalizeFormat, rememberCompress } from "./lib/settings.js";
 
 const isMacOS = process.platform === "darwin";
 
 export default async function main(
-  props: LaunchProps<{ arguments: { quality: string } }>,
+  props: LaunchProps<{ arguments: { quality: string; format: string } }>,
 ): Promise<void> {
   const settings = getSettings();
 
   const argQ = Number.parseInt(props.arguments?.quality ?? "", 10);
+  const argF = normalizeFormat(props.arguments?.format ?? "");
 
   const opts: CompressOptions = {
-    format: settings.format,
+    format: argF ?? settings.format,
     quality: Number.isFinite(argQ) ? Math.max(1, Math.min(100, argQ)) : settings.quality,
     maxDim: settings.maxDim,
     output: settings.output,
@@ -74,7 +76,7 @@ export default async function main(
   if (opts.output === "clipboard") {
     for (const r of ok) if (r.output) await Clipboard.copy({ file: r.output });
   }
-  if (ok.length > 0) rememberCompress(opts.quality, opts.maxDim);
+  if (ok.length > 0) rememberCompress(opts.format, opts.quality, opts.maxDim);
   await rm(tmpDir, { recursive: true, force: true });
 
   toast.hide();

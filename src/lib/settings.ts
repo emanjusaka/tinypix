@@ -3,7 +3,7 @@
  * Cache, persisted), and every command opens with those values next time —
  * no settings page needed. Resolution order per run:
  *   launch argument (one-shot) > last-used > extension preferences (defaults).
- * format/output are stable choices and live only in preferences.
+ * output is a stable choice and lives only in preferences.
  */
 import { Cache, getPreferenceValues } from "@raycast/api";
 import type { TargetFormat, OutputMode } from "./pipeline.js";
@@ -25,6 +25,7 @@ interface Prefs {
 }
 
 interface LastUsed {
+  format?: TargetFormat;
   quality?: number;
   maxDim?: number;
   preset?: string;
@@ -34,6 +35,13 @@ interface LastUsed {
 
 const FORMATS: TargetFormat[] = ["keep", "jpeg", "webp", "avif", "png"];
 const OUTPUTS: OutputMode[] = ["suffix", "replace", "clipboard"];
+
+/** Normalize a user-typed format string ("JPG", " webp" …); null when invalid. */
+export function normalizeFormat(raw: string): TargetFormat | null {
+  const f = raw.trim().toLowerCase();
+  const canon = f === "jpg" ? "jpeg" : f;
+  return (FORMATS as string[]).includes(canon) ? (canon as TargetFormat) : null;
+}
 
 const cache = new Cache();
 const KEY = "last-used";
@@ -50,15 +58,15 @@ function put(v: LastUsed): void {
   cache.set(KEY, JSON.stringify(v));
 }
 
-/** Compress runs (Compress Images, or Resize Images in 仅压缩 mode) remember quality + maxDim. */
-export function rememberCompress(quality: number, maxDim: number): void {
-  put({ ...getLast(), quality, maxDim });
+/** Compress runs (Compress Images, or Resize Images in 仅压缩 mode) remember format + quality + maxDim. */
+export function rememberCompress(format: TargetFormat, quality: number, maxDim: number): void {
+  put({ ...getLast(), format, quality, maxDim });
 }
 
-/** Resize runs remember their form state (preset / custom size / mode / quality).
+/** Resize runs remember their form state (preset / custom size / mode / format / quality).
  *  maxDim is untouched: resize bypasses it, so the plain-compress value stays. */
-export function rememberResize(preset: string, size: string, mode: ResizeMode, quality: number): void {
-  put({ ...getLast(), preset, size, mode, quality });
+export function rememberResize(preset: string, size: string, mode: ResizeMode, format: TargetFormat, quality: number): void {
+  put({ ...getLast(), preset, size, mode, format, quality });
 }
 
 /** Resize form initial state (falls back to defaults on first run or a stale preset key). */
@@ -69,12 +77,14 @@ export function lastResizeState(): { preset: string; size: string; mode: ResizeM
   return { preset, size: last.size ?? "", mode: last.mode ?? "cover" };
 }
 
-/** Resolve effective compress settings: last-used quality/maxDim ?? preferences. */
+/** Resolve effective compress settings: last-used format/quality/maxDim ?? preferences. */
 export function getSettings(): EffectiveSettings {
   const prefs = getPreferenceValues<Prefs>();
   const last = getLast();
+  const lastFormat = last.format !== undefined && (FORMATS as string[]).includes(last.format) ? (last.format as TargetFormat) : undefined;
+  const prefFormat = FORMATS.includes(prefs.format as TargetFormat) ? (prefs.format as TargetFormat) : undefined;
   return {
-    format: FORMATS.includes(prefs.format as TargetFormat) ? (prefs.format as TargetFormat) : "keep",
+    format: lastFormat ?? prefFormat ?? "keep",
     quality: typeof last.quality === "number" ? Math.max(1, Math.min(100, Math.round(last.quality))) : Math.max(1, Math.min(100, Number.parseInt(prefs.quality, 10) || 75)),
     maxDim: typeof last.maxDim === "number" ? Math.max(0, Math.round(last.maxDim)) : Math.max(0, Number.parseInt(prefs.maxDim, 10) || 0),
     output: OUTPUTS.includes(prefs.output as OutputMode) ? (prefs.output as OutputMode) : "suffix",

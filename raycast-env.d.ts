@@ -8,13 +8,13 @@
 /* eslint-disable @typescript-eslint/ban-types */
 
 type ExtensionPreferences = {
-  /** 输出格式 - 输出使用的编码器 */
+  /** Output Format - Encoder used for the output */
   "format": "keep" | "jpeg" | "webp" | "avif" | "png",
-  /** 质量 - 0-100，作用于 JPEG/WebP/AVIF；PNG 无损不受影响 */
+  /** Quality - 0-100 for JPEG/WebP/AVIF. PNG: below 100 enables lossy palette quantization (fewer colors); 100 keeps PNG lossless */
   "quality": string,
-  /** 最长边 - 最长边像素；只缩小不放大。0 = 保持原尺寸 */
+  /** Longest Side - Longest side in px; images are only scaled down. 0 = keep size */
   "maxDim": string,
-  /** 输出方式 - 压缩结果存放位置 */
+  /** Output - Where compressed results go */
   "output": "suffix" | "replace" | "clipboard"
 }
 
@@ -31,8 +31,10 @@ declare namespace Preferences {
 declare namespace Arguments {
   /** Arguments passed to the `compress-images` command */
   export type CompressImages = {
-  /** 质量 (0-100) */
-  "quality": string
+  /** Quality (0-100) */
+  "quality": string,
+  /** Format (keep/jpeg/png/webp/avif) */
+  "format": string
 }
   /** Arguments passed to the `resize-images` command */
   export type ResizeImages = {}
