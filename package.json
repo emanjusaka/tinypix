@@ -1,0 +1,144 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "tinypix",
+  "title": "TinyPix",
+  "description": "Resize and compress images locally with Squoosh codecs (MozJPEG, OxiPNG, WebP, AVIF). Works on the current Finder / File Explorer selection.",
+  "icon": "command-icon.png",
+  "author": "emanjusaka",
+  "contributors": [],
+  "license": "MIT",
+  "keywords": [
+    "compress",
+    "resize",
+    "image",
+    "jpeg",
+    "png",
+    "webp",
+    "avif",
+    "squoosh"
+  ],
+  "categories": [
+    "Productivity",
+    "Media"
+  ],
+  "type": "module",
+  "scripts": {
+    "dev": "ray develop",
+    "build": "ray build -e dist",
+    "lint": "ray lint",
+    "fix-lint": "ray lint --fix",
+    "copy-codecs": "node scripts/copy-codecs.mjs",
+    "postinstall": "node scripts/copy-codecs.mjs || true",
+    "typecheck": "tsc --noEmit",
+    "test": "node scripts/test-pipeline.mjs"
+  },
+  "commands": [
+    {
+      "name": "compress-images",
+      "title": "Compress Images",
+      "subtitle": "TinyPix",
+      "description": "Resize + compress images selected in Finder or File Explorer (quality arg optional; settings are remembered from last run)",
+      "mode": "no-view",
+      "arguments": [
+        {
+          "name": "quality",
+          "placeholder": "Quality (0-100)",
+          "type": "text",
+          "optional": true
+        }
+      ]
+    },
+    {
+      "name": "resize-images",
+      "title": "Resize Images",
+      "subtitle": "TinyPix",
+      "description": "Resize to a platform preset (XHS / WeChat / blog) or custom size — or just compress — via a form",
+      "mode": "view"
+    }
+  ],
+  "preferences": [
+    {
+      "name": "format",
+      "title": "Output Format",
+      "type": "dropdown",
+      "data": [
+        {
+          "title": "Keep Original (JPEG→MozJPEG, PNG→OxiPNG, WebP/AVIF Re-encoded)",
+          "value": "keep"
+        },
+        {
+          "title": "JPEG (MozJPEG)",
+          "value": "jpeg"
+        },
+        {
+          "title": "WebP",
+          "value": "webp"
+        },
+        {
+          "title": "AVIF (Slowest, Smallest)",
+          "value": "avif"
+        },
+        {
+          "title": "PNG (OxiPNG, Lossless)",
+          "value": "png"
+        }
+      ],
+      "default": "keep",
+      "required": true,
+      "description": "Encoder used for the output"
+    },
+    {
+      "name": "quality",
+      "title": "Quality",
+      "type": "textfield",
+      "default": "75",
+      "required": true,
+      "description": "0-100 for JPEG/WebP/AVIF. PNG: below 100 enables lossy palette quantization (fewer colors); 100 keeps PNG lossless"
+    },
+    {
+      "name": "maxDim",
+      "title": "Longest Side",
+      "type": "textfield",
+      "default": "2000",
+      "required": true,
+      "description": "Longest side in px; images are only scaled down. 0 = keep size"
+    },
+    {
+      "name": "output",
+      "title": "Output",
+      "type": "dropdown",
+      "data": [
+        {
+          "title": "New File With -min Suffix (photo.jpg → photo-min.jpg)",
+          "value": "suffix"
+        },
+        {
+          "title": "Replace Original File",
+          "value": "replace"
+        },
+        {
+          "title": "Copy to Clipboard",
+          "value": "clipboard"
+        }
+      ],
+      "default": "suffix",
+      "required": true,
+      "description": "Where compressed results go"
+    }
+  ],
+  "dependencies": {
+    "@jsquash/avif": "^2.1.1",
+    "@jsquash/jpeg": "^1.6.0",
+    "@jsquash/oxipng": "^2.3.0",
+    "@jsquash/png": "^3.1.1",
+    "@jsquash/webp": "^1.5.0",
+    "@raycast/api": "^2.7.3",
+    "wasm-feature-detect": "^1.9.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.19.17",
+    "@types/react": "19.0.10",
+    "esbuild": "^0.28.2",
+    "typescript": "^5.9.3"
+  }
+}

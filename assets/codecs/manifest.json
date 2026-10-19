@@ -1,0 +1,47 @@
+[
+  {
+    "pkg": "@jsquash/jpeg",
+    "rel": "codec/dec/mozjpeg_dec.wasm",
+    "path": "assets/codecs/@jsquash/jpeg/codec/dec/mozjpeg_dec.wasm"
+  },
+  {
+    "pkg": "@jsquash/jpeg",
+    "rel": "codec/enc/mozjpeg_enc.wasm",
+    "path": "assets/codecs/@jsquash/jpeg/codec/enc/mozjpeg_enc.wasm"
+  },
+  {
+    "pkg": "@jsquash/png",
+    "rel": "codec/pkg/squoosh_png_bg.wasm",
+    "path": "assets/codecs/@jsquash/png/codec/pkg/squoosh_png_bg.wasm"
+  },
+  {
+    "pkg": "@jsquash/oxipng",
+    "rel": "codec/pkg/squoosh_oxipng_bg.wasm",
+    "path": "assets/codecs/@jsquash/oxipng/codec/pkg/squoosh_oxipng_bg.wasm"
+  },
+  {
+    "pkg": "@jsquash/webp",
+    "rel": "codec/enc/webp_enc.wasm",
+    "path": "assets/codecs/@jsquash/webp/codec/enc/webp_enc.wasm"
+  },
+  {
+    "pkg": "@jsquash/webp",
+    "rel": "codec/enc/webp_enc_simd.wasm",
+    "path": "assets/codecs/@jsquash/webp/codec/enc/webp_enc_simd.wasm"
+  },
+  {
+    "pkg": "@jsquash/webp",
+    "rel": "codec/dec/webp_dec.wasm",
+    "path": "assets/codecs/@jsquash/webp/codec/dec/webp_dec.wasm"
+  },
+  {
+    "pkg": "@jsquash/avif",
+    "rel": "codec/enc/avif_enc.wasm",
+    "path": "assets/codecs/@jsquash/avif/codec/enc/avif_enc.wasm"
+  },
+  {
+    "pkg": "@jsquash/avif",
+    "rel": "codec/dec/avif_dec.wasm",
+    "path": "assets/codecs/@jsquash/avif/codec/dec/avif_dec.wasm"
+  }
+]

@@ -1,0 +1,7 @@
+# Build/test artifacts
+.test/
+dist/
+node_modules/
+
+# macOS
+.DS_Store
