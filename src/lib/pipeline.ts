@@ -70,6 +70,62 @@ const abOf = (b: Buffer): ArrayBuffer =>
   b.buffer.slice(b.byteOffset, b.byteOffset + b.length) as ArrayBuffer;
 
 /**
+ * Human-readable reason for a source we cannot decode. Magic bytes identify the
+ * actual container, which is far more useful than "unsupported format" — HEIC
+ * and GIF are the two macOS users hit most.
+ */
+function describeUnsupported(b: Uint8Array): string {
+  if (b.length >= 12 && b[4] === 0x66 && b[5] === 0x74 && b[6] === 0x79 && b[7] === 0x70) {
+    const brand = String.fromCharCode(...b.slice(8, 12)).replace(/\0/g, "");
+    if (["heic", "heix", "hevc", "heim", "heis", "mif1", "msf1"].includes(brand)) {
+      return "HEIC/HEIF not supported — export as JPEG first (Photos → Export, or `sips -s format jpeg`)";
+    }
+  }
+  if (b[0] === 0x47 && b[1] === 0x49 && b[2] === 0x46) return "GIF not supported — convert to PNG/WebP first";
+  if ((b[0] === 0x49 && b[1] === 0x49 && b[2] === 0x2a) || (b[0] === 0x4d && b[1] === 0x4d && b[2] === 0x00)) {
+    return "TIFF not supported — convert to JPEG/PNG first";
+  }
+  if (b[0] === 0x42 && b[1] === 0x4d) return "BMP not supported — convert to PNG first";
+  return "unsupported image format (JPEG/PNG/WebP/AVIF only)";
+}
+
+/**
+ * CMYK / YCCK JPEGs (4 components) make the MozJPEG wasm decoder abort with an
+ * opaque Emscripten ExitStatus, so detect them up front and explain the fix.
+ */
+function jpegHasFourComponents(b: Uint8Array): boolean {
+  let i = 2; // skip SOI
+  while (i + 3 < b.length) {
+    if (b[i] !== 0xff) {
+      i++;
+      continue;
+    }
+    const marker = b[i + 1];
+    if (marker === 0xd8 || marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) {
+      i += 2;
+      continue;
+    }
+    const len = (b[i + 2] << 8) | b[i + 3];
+    if (len < 2) return false;
+    const isSof = marker >= 0xc0 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xc8 && marker !== 0xcc;
+    if (isSof) return b[i + 9] === 4; // precision(1) height(2) width(2) components(1) → offset 9
+    i += 2 + len;
+  }
+  return false;
+}
+
+/** Emscripten rejects with plain objects (ExitStatus); keep the useful text. */
+function errText(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  if (err && typeof err === "object") {
+    const m = (err as { message?: unknown }).message;
+    if (typeof m === "string" && m.trim()) return m.trim();
+  }
+  const s = String(err);
+  return s === "[object Object]" ? "unknown decoder error" : s;
+}
+
+/**
  * True when a PNG is inherently limited to ≤256 colors (indexed, or 8-bit-or-
  * less grayscale) — palette quantization cannot improve it, so such inputs
  * keep the lossless fast path even with quality < 100.
@@ -107,7 +163,10 @@ export async function compressFile(
     const inBuf = await readFile(input);
     res.inBytes = inBuf.length;
     const fmt = sniffFormat(inBuf.subarray(0, Math.min(64, inBuf.length)));
-    if (fmt === "unsupported") throw new Error("unsupported image format (JPEG/PNG/WebP/AVIF only)");
+    if (fmt === "unsupported") throw new Error(describeUnsupported(inBuf));
+    if (fmt === "jpeg" && jpegHasFourComponents(inBuf)) {
+      throw new Error("CMYK JPEG not supported — re-save as RGB/sRGB first (Photoshop → Mode → RGB, or export from the original)");
+    }
 
     const target: Exclude<TargetFormat, "keep"> =
       opts.format !== "keep"
@@ -183,7 +242,7 @@ export async function compressFile(
     }
     return res;
   } catch (err) {
-    res.error = err instanceof Error ? err.message : String(err);
+    res.error = errText(err);
     return res;
   }
 }
