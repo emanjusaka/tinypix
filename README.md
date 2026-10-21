@@ -1,6 +1,6 @@
 # TinyPix
 
-A [Raycast](https://raycast.com) extension that shrinks images — resize dimensions and recompress in one step, fully offline, powered by the same WebAssembly codecs as [Squoosh](https://squoosh.app) (via [jSquash](https://github.com/jamsinclair/jSquash): MozJPEG, Oxipng, WebP, AVIF). Resizing (Lanczos3) and EXIF orientation run in-process. Native inputs: JPEG, PNG, WebP, AVIF; BMP, TIFF, HEIC/HEIF, GIF and CMYK JPEG are converted to PNG through macOS `sips` first, so you can drop almost anything on it.
+A [Raycast](https://raycast.com) extension that shrinks images — resize dimensions and recompress in one step, fully offline, powered by the same WebAssembly codecs as [Squoosh](https://squoosh.app) (via [jSquash](https://github.com/jamsinclair/jSquash): MozJPEG, Oxipng, WebP, AVIF). Resizing (Lanczos3) and EXIF orientation run in-process. Native inputs: JPEG, PNG, WebP, AVIF — the same four formats [TinyPNG](https://tinypng.com) accepts. On macOS, anything else the system can read (BMP, TIFF, HEIC/HEIF, GIF, CMYK JPEG) is converted to PNG through `sips` as a best-effort extra; on Windows those report a clear "not supported" message.
 
 No API keys, no uploads — everything runs locally. Selection is read via the official `getSelectedFinderItems()` API, so the same code works on macOS and Windows.
 

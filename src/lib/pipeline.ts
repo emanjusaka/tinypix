@@ -100,7 +100,9 @@ function describeUnsupported(b: Uint8Array): string {
   if (b.length >= 12 && b[4] === 0x66 && b[5] === 0x74 && b[6] === 0x79 && b[7] === 0x70) {
     const brand = String.fromCharCode(...b.slice(8, 12)).replace(/\0/g, "");
     if (["heic", "heix", "hevc", "heim", "heis", "mif1", "msf1"].includes(brand)) {
-      return "HEIC/HEIF not supported — export as JPEG first (Photos → Export, or `sips -s format jpeg`)";
+      return process.platform === "darwin"
+        ? "HEIC/HEIF not supported — export as JPEG first (Photos → Export, or `sips -s format jpeg`)"
+        : "HEIC/HEIF not supported — export as JPEG first (Photos → Save a copy, or Paint → Save as)";
     }
   }
   if (b[0] === 0x47 && b[1] === 0x49 && b[2] === 0x46) return "GIF not supported — convert to PNG/WebP first";
