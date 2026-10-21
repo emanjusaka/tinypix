@@ -1,8 +1,10 @@
 /**
  * Compression pipeline: jSquash (Squoosh) wasm codecs + pure-TS pixel ops.
- * Inputs: JPEG, PNG, WebP, AVIF only — anything else is rejected at sniff time.
- * No external processes: decode via wasm, EXIF orientation baked in TS,
- * resize via separable Lanczos3 (imageops.ts), encode via wasm.
+ * Inputs: JPEG, PNG, WebP, AVIF natively. Anything else (BMP/TIFF/HEIC/GIF) and
+ * CMYK JPEG go through a one-shot macOS `sips` → PNG conversion first, so the
+ * wasm decoders only ever see pixels they understand. Decode via wasm, EXIF
+ * orientation baked in TS, resize via separable Lanczos3 (imageops.ts),
+ * encode via wasm.
  *
  * Flow for one input file:
  *  - target format = pref "keep" ? input format : chosen format
@@ -18,7 +20,9 @@
  *    when the output is lossless anyway (quality = 100, or the source is
  *    already palette-limited) and feeds the original bytes to OxiPNG.
  */
+import { execFile } from "node:child_process";
 import { readFile, writeFile, rm } from "node:fs/promises";
+import { promisify } from "node:util";
 import { randomUUID } from "node:crypto";
 import { join, dirname, basename, extname } from "node:path";
 import { decodeImage, encodeImage, encodePng, optimisePng, type RawImage } from "./codecs.js";
@@ -64,6 +68,24 @@ export function sniffFormat(b: Uint8Array): SniffedFormat {
     if (brand === "avif" || brand === "avis") return "avif";
   }
   return "unsupported";
+}
+
+/**
+ * Last-resort decode through macOS ImageIO (`sips`). Handles everything our
+ * wasm decoders refuse: BMP, TIFF, HEIC/HEIF, GIF (first frame) and CMYK JPEG.
+ * Returns PNG bytes, or null when the conversion fails.
+ */
+async function convertToPng(input: string, tmpDir: string): Promise<Buffer | null> {
+  if (process.platform !== "darwin") return null;
+  const out = join(tmpDir, `converted-${randomUUID()}.png`);
+  try {
+    await promisify(execFile)("/usr/bin/sips", ["-s", "format", "png", input, "--out", out], { timeout: 120_000 });
+    return await readFile(out);
+  } catch {
+    return null;
+  } finally {
+    await rm(out, { force: true }).catch(() => {});
+  }
 }
 
 const abOf = (b: Buffer): ArrayBuffer =>
@@ -162,10 +184,18 @@ export async function compressFile(
   try {
     const inBuf = await readFile(input);
     res.inBytes = inBuf.length;
-    const fmt = sniffFormat(inBuf.subarray(0, Math.min(64, inBuf.length)));
-    if (fmt === "unsupported") throw new Error(describeUnsupported(inBuf));
-    if (fmt === "jpeg" && jpegHasFourComponents(inBuf)) {
-      throw new Error("CMYK JPEG not supported — re-save as RGB/sRGB first (Photoshop → Mode → RGB, or export from the original)");
+    let fmt = sniffFormat(inBuf.subarray(0, Math.min(64, inBuf.length)));
+    let src: Buffer<ArrayBufferLike> = inBuf;
+    if (fmt === "unsupported" || (fmt === "jpeg" && jpegHasFourComponents(inBuf))) {
+      const png = await convertToPng(input, ctx.tmpDir);
+      if (png) {
+        src = png;
+        fmt = "png";
+      } else if (fmt === "unsupported") {
+        throw new Error(describeUnsupported(inBuf));
+      } else {
+        throw new Error("CMYK JPEG not supported — re-save as RGB/sRGB first (Photoshop → Mode → RGB, or export from the original)");
+      }
     }
 
     const target: Exclude<TargetFormat, "keep"> =
@@ -176,7 +206,7 @@ export async function compressFile(
           : "jpeg";
     const targetExt = EXT[target];
 
-    const orientation = readExifOrientation(inBuf, fmt);
+    const orientation = readExifOrientation(src, fmt);
     const spec = opts.resize;
     const resizing = !!spec && (spec.width > 0 || spec.height > 0);
     let fellBack = false;
@@ -192,12 +222,12 @@ export async function compressFile(
       !resizing &&
       opts.maxDim === 0 &&
       orientation === 1 &&
-      (opts.quality >= 100 || pngPaletteLimited(inBuf.subarray(0, Math.min(64, inBuf.length))));
+      (opts.quality >= 100 || pngPaletteLimited(src.subarray(0, Math.min(64, src.length))));
     if (pngFastPath) {
       // Fast path: pixels untouched, pure lossless optimisation.
-      outBuf = Buffer.from(await optimisePng(ctx.baseDir, abOf(inBuf), 2));
+      outBuf = Buffer.from(await optimisePng(ctx.baseDir, abOf(src), 2));
     } else {
-      let image: RawImage = await decodeImage(ctx.baseDir, fmt, abOf(inBuf));
+      let image: RawImage = await decodeImage(ctx.baseDir, fmt, abOf(src));
       if (orientation > 1) image = applyOrientation(image, orientation);
       if (resizing && spec) {
         const r = applyResize(image, spec);

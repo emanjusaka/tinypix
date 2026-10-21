@@ -1,6 +1,6 @@
 # TinyPix
 
-A [Raycast](https://raycast.com) extension that shrinks images — resize dimensions and recompress in one step, fully offline, powered by the same WebAssembly codecs as [Squoosh](https://squoosh.app) (via [jSquash](https://github.com/jamsinclair/jSquash): MozJPEG, Oxipng, WebP, AVIF). Resizing (Lanczos3) and EXIF orientation run in-process — no `sips`, no child processes. Supported inputs: JPEG, PNG, WebP, AVIF.
+A [Raycast](https://raycast.com) extension that shrinks images — resize dimensions and recompress in one step, fully offline, powered by the same WebAssembly codecs as [Squoosh](https://squoosh.app) (via [jSquash](https://github.com/jamsinclair/jSquash): MozJPEG, Oxipng, WebP, AVIF). Resizing (Lanczos3) and EXIF orientation run in-process. Native inputs: JPEG, PNG, WebP, AVIF; BMP, TIFF, HEIC/HEIF, GIF and CMYK JPEG are converted to PNG through macOS `sips` first, so you can drop almost anything on it.
 
 No API keys, no uploads — everything runs locally. Selection is read via the official `getSelectedFinderItems()` API, so the same code works on macOS and Windows.
 
@@ -42,7 +42,7 @@ Every run remembers the parameters it used (output format, quality, max dimensio
 - **JPEG / WebP / AVIF** — encoded by Squoosh wasm codecs (MozJPEG / libwebp / libaom) with the chosen quality.
 - **PNG** — at quality < 100, colors are quantized to a palette (≈ quality × 2.56 colors, no dithering) and the result is optimised by Oxipng into an indexed PNG; at quality 100 it stays **lossless** (pure Oxipng optimisation).
 - EXIF orientation is baked into the pixels before encoding, so rotated iPhone photos come out upright.
-- Other formats (HEIC, GIF, TIFF, BMP) are not supported yet.
+- **Anything macOS can read** — BMP, TIFF, HEIC/HEIF, GIF (first frame) and CMYK JPEG are converted to PNG via `sips` before compression (a mislabelled file, e.g. a BMP named `.png`, is detected by magic bytes). Without `sips` (non-macOS) these fall back to a clear error message.
 
 ## Development
 
