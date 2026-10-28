@@ -2,46 +2,46 @@
   {
     "pkg": "@jsquash/jpeg",
     "rel": "codec/dec/mozjpeg_dec.wasm",
-    "path": "assets/codecs/@jsquash/jpeg/codec/dec/mozjpeg_dec.wasm"
+    "path": "assets/codecs/@jsquash/jpeg/codec/dec/mozjpeg_dec.wasm.br"
   },
   {
     "pkg": "@jsquash/jpeg",
     "rel": "codec/enc/mozjpeg_enc.wasm",
-    "path": "assets/codecs/@jsquash/jpeg/codec/enc/mozjpeg_enc.wasm"
+    "path": "assets/codecs/@jsquash/jpeg/codec/enc/mozjpeg_enc.wasm.br"
   },
   {
     "pkg": "@jsquash/png",
     "rel": "codec/pkg/squoosh_png_bg.wasm",
-    "path": "assets/codecs/@jsquash/png/codec/pkg/squoosh_png_bg.wasm"
+    "path": "assets/codecs/@jsquash/png/codec/pkg/squoosh_png_bg.wasm.br"
   },
   {
     "pkg": "@jsquash/oxipng",
     "rel": "codec/pkg/squoosh_oxipng_bg.wasm",
-    "path": "assets/codecs/@jsquash/oxipng/codec/pkg/squoosh_oxipng_bg.wasm"
+    "path": "assets/codecs/@jsquash/oxipng/codec/pkg/squoosh_oxipng_bg.wasm.br"
   },
   {
     "pkg": "@jsquash/webp",
     "rel": "codec/enc/webp_enc.wasm",
-    "path": "assets/codecs/@jsquash/webp/codec/enc/webp_enc.wasm"
+    "path": "assets/codecs/@jsquash/webp/codec/enc/webp_enc.wasm.br"
   },
   {
     "pkg": "@jsquash/webp",
     "rel": "codec/enc/webp_enc_simd.wasm",
-    "path": "assets/codecs/@jsquash/webp/codec/enc/webp_enc_simd.wasm"
+    "path": "assets/codecs/@jsquash/webp/codec/enc/webp_enc_simd.wasm.br"
   },
   {
     "pkg": "@jsquash/webp",
     "rel": "codec/dec/webp_dec.wasm",
-    "path": "assets/codecs/@jsquash/webp/codec/dec/webp_dec.wasm"
+    "path": "assets/codecs/@jsquash/webp/codec/dec/webp_dec.wasm.br"
   },
   {
     "pkg": "@jsquash/avif",
     "rel": "codec/enc/avif_enc.wasm",
-    "path": "assets/codecs/@jsquash/avif/codec/enc/avif_enc.wasm"
+    "path": "assets/codecs/@jsquash/avif/codec/enc/avif_enc.wasm.br"
   },
   {
     "pkg": "@jsquash/avif",
     "rel": "codec/dec/avif_dec.wasm",
-    "path": "assets/codecs/@jsquash/avif/codec/dec/avif_dec.wasm"
+    "path": "assets/codecs/@jsquash/avif/codec/dec/avif_dec.wasm.br"
   }
 ]

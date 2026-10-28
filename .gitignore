@@ -6,3 +6,6 @@ node_modules/
 # macOS
 .DS_Store
 *.rayext
+
+# codec packing stamp (build artifact)
+assets/codecs/.pack-stamp.json

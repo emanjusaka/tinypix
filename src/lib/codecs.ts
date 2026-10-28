@@ -4,11 +4,16 @@
  * survives esbuild bundling inside Raycast.
  *
  * wasm lookup order:
- *   1. <extensionRoot>/node_modules/<pkg>/<rel>   (dev mode)
- *   2. <extensionRoot>/assets/codecs/<pkg>/<rel>  (post copy-codecs / store)
+ *   1. <extensionRoot>/node_modules/<pkg>/<rel>      (dev mode, raw)
+ *   2. <extensionRoot>/assets/codecs/<pkg>/<rel>.br  (packed, see copy-codecs)
+ *   3. <extensionRoot>/assets/codecs/<pkg>/<rel>     (packed by an older build)
+ *
+ * The packed form is Brotli; it covers 5.9 MB of raw wasm in 1.5 MB, and since
+ * codecs initialize lazily only the formats a run touches are ever unpacked.
  */
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { brotliDecompressSync } from "node:zlib";
 
 // Defensive polyfill: wasm-bindgen codecs construct ImageData on decode.
 // Emscripten glues do this too, but only for their own module.
@@ -36,22 +41,35 @@ const WASM = {
   avifDec: ["@jsquash/avif", "codec/dec/avif_dec.wasm"],
 } as const;
 
-function wasmPath(baseDir: string, entry: readonly [string, string]): string {
+export interface WasmSource {
+  path: string;
+  /** True when `path` holds Brotli-compressed wasm rather than raw wasm. */
+  packed: boolean;
+}
+
+function resolveWasm(baseDir: string, entry: readonly [string, string]): WasmSource {
   const [pkg, rel] = entry;
-  const candidates = [join(baseDir, "node_modules", pkg, rel), join(baseDir, "assets", "codecs", pkg, rel)];
-  for (const c of candidates) if (existsSync(c)) return c;
+  const candidates: WasmSource[] = [
+    { path: join(baseDir, "node_modules", pkg, rel), packed: false },
+    { path: join(baseDir, "assets", "codecs", pkg, `${rel}.br`), packed: true },
+    { path: join(baseDir, "assets", "codecs", pkg, rel), packed: false },
+  ];
+  for (const c of candidates) if (existsSync(c.path)) return c;
   throw new Error(`wasm not found: ${pkg}/${rel}`);
 }
 
-const bytes = (baseDir: string, entry: readonly [string, string]): Uint8Array<ArrayBuffer> => {
-  const b = readFileSync(wasmPath(baseDir, entry));
-  const out = new Uint8Array(new ArrayBuffer(b.byteLength));
-  out.set(b);
+function readWasm(baseDir: string, entry: readonly [string, string]): Uint8Array<ArrayBuffer> {
+  const { path, packed } = resolveWasm(baseDir, entry);
+  const raw = packed ? brotliDecompressSync(readFileSync(path)) : readFileSync(path);
+  // Copy into a fresh ArrayBuffer: WebAssembly rejects a view over a pooled
+  // Buffer's backing store, and brotliDecompressSync returns a plain Buffer.
+  const out = new Uint8Array(new ArrayBuffer(raw.byteLength));
+  out.set(raw);
   return out;
-};
+}
 
-const module = (baseDir: string, entry: readonly [string, string]): WebAssembly.Module =>
-  new WebAssembly.Module(bytes(baseDir, entry));
+const readWasmModule = (baseDir: string, entry: readonly [string, string]): WebAssembly.Module =>
+  new WebAssembly.Module(readWasm(baseDir, entry));
 
 // ---- lazily-initialized codec singletons ----------------------------------
 
@@ -69,7 +87,7 @@ async function jpegDecode(baseDir: string) {
   if (!jpegDecodeP) {
     jpegDecodeP = (async () => {
       const m = await import("@jsquash/jpeg/decode.js");
-      await m.init(module(baseDir, WASM.jpegDec));
+      await m.init(readWasmModule(baseDir, WASM.jpegDec));
       return m.default;
     })();
   }
@@ -80,7 +98,7 @@ async function jpegEncode(baseDir: string) {
   if (!jpegEncodeP) {
     jpegEncodeP = (async () => {
       const m = await import("@jsquash/jpeg/encode.js");
-      await m.init(module(baseDir, WASM.jpegEnc));
+      await m.init(readWasmModule(baseDir, WASM.jpegEnc));
       return m.default;
     })();
   }
@@ -91,7 +109,7 @@ async function pngDecode(baseDir: string) {
   if (!pngDecodeP) {
     pngDecodeP = (async () => {
       const m = await import("@jsquash/png/decode.js");
-      await m.init(bytes(baseDir, WASM.pngDec));
+      await m.init(readWasm(baseDir, WASM.pngDec));
       return m.default;
     })();
   }
@@ -102,7 +120,7 @@ async function pngEncode(baseDir: string) {
   if (!pngEncodeP) {
     pngEncodeP = (async () => {
       const m = await import("@jsquash/png/encode.js");
-      await m.init(bytes(baseDir, WASM.pngEnc));
+      await m.init(readWasm(baseDir, WASM.pngEnc));
       return m.default;
     })();
   }
@@ -113,7 +131,7 @@ async function oxipng(baseDir: string) {
   if (!oxipngP) {
     oxipngP = (async () => {
       const m = await import("@jsquash/oxipng/optimise.js");
-      await m.init(bytes(baseDir, WASM.oxipng));
+      await m.init(readWasm(baseDir, WASM.oxipng));
       return m.default;
     })();
   }
@@ -128,7 +146,7 @@ async function webpEncode(baseDir: string) {
       // otherwise the injected WebAssembly.Module imports won't line up.
       const { simd } = await import("wasm-feature-detect");
       const entry = (await simd()) ? WASM.webpEncSimd : WASM.webpEnc;
-      await m.init(module(baseDir, entry));
+      await m.init(readWasmModule(baseDir, entry));
       return m.default;
     })();
   }
@@ -139,7 +157,7 @@ async function webpDecode(baseDir: string) {
   if (!webpDecodeP) {
     webpDecodeP = (async () => {
       const m = await import("@jsquash/webp/decode.js");
-      await m.init(module(baseDir, WASM.webpDec));
+      await m.init(readWasmModule(baseDir, WASM.webpDec));
       return m.default;
     })();
   }
@@ -150,7 +168,7 @@ async function avifEncode(baseDir: string) {
   if (!avifEncodeP) {
     avifEncodeP = (async () => {
       const m = await import("@jsquash/avif/encode.js");
-      await m.init(module(baseDir, WASM.avifEnc));
+      await m.init(readWasmModule(baseDir, WASM.avifEnc));
       return m.default;
     })();
   }
@@ -161,7 +179,7 @@ async function avifDecode(baseDir: string) {
   if (!avifDecodeP) {
     avifDecodeP = (async () => {
       const m = await import("@jsquash/avif/decode.js");
-      await m.init(module(baseDir, WASM.avifDec));
+      await m.init(readWasmModule(baseDir, WASM.avifDec));
       return m.default;
     })();
   }
