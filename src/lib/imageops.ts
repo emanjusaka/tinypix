@@ -32,12 +32,11 @@ function tiffOrientation(b: Uint8Array, off: number, end: number): number {
   const little = b[off] === 0x49 && b[off + 1] === 0x49;
   const big = b[off] === 0x4d && b[off + 1] === 0x4d;
   if (!little && !big) return 1;
-  const u16 = (p: number): number =>
-    little ? b[p] | (b[p + 1] << 8) : (b[p] << 8) | b[p + 1];
+  const u16 = (p: number): number => (little ? b[p] | (b[p + 1] << 8) : (b[p] << 8) | b[p + 1]);
   const u32 = (p: number): number =>
     little
-      ? ((b[p] | (b[p + 1] << 8) | (b[p + 2] << 16) | (b[p + 3] << 24)) >>> 0)
-      : (((b[p] << 24) | (b[p + 1] << 16) | (b[p + 2] << 8) | b[p + 3]) >>> 0);
+      ? (b[p] | (b[p + 1] << 8) | (b[p + 2] << 16) | (b[p + 3] << 24)) >>> 0
+      : ((b[p] << 24) | (b[p + 1] << 16) | (b[p + 2] << 8) | b[p + 3]) >>> 0;
   const ifd = off + u32(off + 4);
   if (ifd + 2 > end) return 1;
   const entries = u16(ifd);
@@ -125,13 +124,34 @@ export function applyOrientation(img: RawImage, orientation: number): RawImage {
       let dx: number;
       let dy: number;
       switch (orientation) {
-        case 2: dx = w - 1 - x; dy = y; break; // flip H
-        case 3: dx = w - 1 - x; dy = h - 1 - y; break; // 180°
-        case 4: dx = x; dy = h - 1 - y; break; // flip V
-        case 5: dx = y; dy = x; break; // transpose
-        case 6: dx = h - 1 - y; dy = x; break; // 90° CW
-        case 7: dx = h - 1 - y; dy = w - 1 - x; break; // anti-transpose
-        default: dx = y; dy = w - 1 - x; break; // 8: 90° CCW
+        case 2:
+          dx = w - 1 - x;
+          dy = y;
+          break; // flip H
+        case 3:
+          dx = w - 1 - x;
+          dy = h - 1 - y;
+          break; // 180°
+        case 4:
+          dx = x;
+          dy = h - 1 - y;
+          break; // flip V
+        case 5:
+          dx = y;
+          dy = x;
+          break; // transpose
+        case 6:
+          dx = h - 1 - y;
+          dy = x;
+          break; // 90° CW
+        case 7:
+          dx = h - 1 - y;
+          dy = w - 1 - x;
+          break; // anti-transpose
+        default:
+          dx = y;
+          dy = w - 1 - x;
+          break; // 8: 90° CCW
       }
       const di = (dy * dw + dx) * 4;
       d[di] = s[si];

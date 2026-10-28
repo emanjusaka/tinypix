@@ -4,14 +4,7 @@
  * Optional one-shot arguments: <quality> [format] (also remembered as last-used).
  *   e.g. "Compress Images 75 webp" — quality 75, converted to WebP.
  */
-import {
-  environment,
-  showHUD,
-  Toast,
-  getSelectedFinderItems,
-  Clipboard,
-  type LaunchProps,
-} from "@raycast/api";
+import { environment, showHUD, Toast, getSelectedFinderItems, Clipboard, type LaunchProps } from "@raycast/api";
 import { mkdir, rm } from "node:fs/promises";
 import { join, dirname, basename } from "node:path";
 import { randomUUID } from "node:crypto";
@@ -37,9 +30,7 @@ export default async function main(
 
   let files: string[] = [];
   try {
-    files = (await getSelectedFinderItems())
-      .map((f) => f.path)
-      .filter((f) => /\.(jpe?g|png|webp|avif)$/i.test(f));
+    files = (await getSelectedFinderItems()).map((f) => f.path).filter((f) => /\.(jpe?g|png|webp|avif)$/i.test(f));
   } catch {
     files = [];
   }
@@ -48,7 +39,10 @@ export default async function main(
     return;
   }
 
-  const toast = new Toast({ style: Toast.Style.Animated, title: `Compressing ${files.length} image${files.length > 1 ? "s" : ""}…` });
+  const toast = new Toast({
+    style: Toast.Style.Animated,
+    title: `Compressing ${files.length} image${files.length > 1 ? "s" : ""}…`,
+  });
   await toast.show();
 
   const tmpDir = join(environment.supportPath ?? "/tmp", `tinypix-${randomUUID()}`);

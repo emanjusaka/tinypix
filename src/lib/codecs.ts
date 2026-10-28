@@ -16,7 +16,11 @@ if (typeof globalThis.ImageData === "undefined") {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (globalThis as any).ImageData = class ImageData {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    constructor(public data: any, public width: number, public height: number) {}
+    constructor(
+      public data: any,
+      public width: number,
+      public height: number,
+    ) {}
   };
 }
 
@@ -35,10 +39,7 @@ const WASM = {
 
 function wasmPath(baseDir: string, entry: readonly [string, string]): string {
   const [pkg, rel] = entry;
-  const candidates = [
-    join(baseDir, "node_modules", pkg, rel),
-    join(baseDir, "assets", "codecs", pkg, rel),
-  ];
+  const candidates = [join(baseDir, "node_modules", pkg, rel), join(baseDir, "assets", "codecs", pkg, rel)];
   for (const c of candidates) if (existsSync(c)) return c;
   throw new Error(`wasm not found: ${pkg}/${rel}`);
 }
@@ -218,10 +219,6 @@ export async function encodePng(baseDir: string, image: RawImage): Promise<Array
   return pngEncode(baseDir).then((f) => f(image as never));
 }
 
-export async function optimisePng(
-  baseDir: string,
-  input: ArrayBuffer,
-  level = 2,
-): Promise<ArrayBuffer> {
+export async function optimisePng(baseDir: string, input: ArrayBuffer, level = 2): Promise<ArrayBuffer> {
   return oxipng(baseDir).then((f) => f(input, { level }));
 }

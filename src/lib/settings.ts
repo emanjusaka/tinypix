@@ -65,7 +65,13 @@ export function rememberCompress(format: TargetFormat, quality: number, maxDim: 
 
 /** Resize runs remember their form state (preset / custom size / mode / format / quality).
  *  maxDim is untouched: resize bypasses it, so the plain-compress value stays. */
-export function rememberResize(preset: string, size: string, mode: ResizeMode, format: TargetFormat, quality: number): void {
+export function rememberResize(
+  preset: string,
+  size: string,
+  mode: ResizeMode,
+  format: TargetFormat,
+  quality: number,
+): void {
   put({ ...getLast(), preset, size, mode, format, quality });
 }
 
@@ -81,12 +87,21 @@ export function lastResizeState(): { preset: string; size: string; mode: ResizeM
 export function getSettings(): EffectiveSettings {
   const prefs = getPreferenceValues<Prefs>();
   const last = getLast();
-  const lastFormat = last.format !== undefined && (FORMATS as string[]).includes(last.format) ? (last.format as TargetFormat) : undefined;
+  const lastFormat =
+    last.format !== undefined && (FORMATS as string[]).includes(last.format)
+      ? (last.format as TargetFormat)
+      : undefined;
   const prefFormat = FORMATS.includes(prefs.format as TargetFormat) ? (prefs.format as TargetFormat) : undefined;
   return {
     format: lastFormat ?? prefFormat ?? "keep",
-    quality: typeof last.quality === "number" ? Math.max(1, Math.min(100, Math.round(last.quality))) : Math.max(1, Math.min(100, Number.parseInt(prefs.quality, 10) || 75)),
-    maxDim: typeof last.maxDim === "number" ? Math.max(0, Math.round(last.maxDim)) : Math.max(0, Number.parseInt(prefs.maxDim, 10) || 0),
+    quality:
+      typeof last.quality === "number"
+        ? Math.max(1, Math.min(100, Math.round(last.quality)))
+        : Math.max(1, Math.min(100, Number.parseInt(prefs.quality, 10) || 75)),
+    maxDim:
+      typeof last.maxDim === "number"
+        ? Math.max(0, Math.round(last.maxDim))
+        : Math.max(0, Number.parseInt(prefs.maxDim, 10) || 0),
     output: OUTPUTS.includes(prefs.output as OutputMode) ? (prefs.output as OutputMode) : "suffix",
   };
 }

@@ -3,12 +3,28 @@
  * The "Compress Only" preset turns this into a plain compress form (longest-side cap),
  * replacing the former Compress Picked Images command.
  */
-import { Form, Action, ActionPanel, environment, showHUD, Toast, Clipboard, getSelectedFinderItems } from "@raycast/api";
+import {
+  Form,
+  Action,
+  ActionPanel,
+  environment,
+  showHUD,
+  Toast,
+  Clipboard,
+  getSelectedFinderItems,
+} from "@raycast/api";
 import { useEffect, useState, type ReactElement } from "react";
 import { mkdir, rm } from "node:fs/promises";
 import { join, dirname, basename } from "node:path";
 import { randomUUID } from "node:crypto";
-import { compressFile, fmtKB, fmtPercent, type CompressOptions, type FileResult, type TargetFormat } from "./lib/pipeline.js";
+import {
+  compressFile,
+  fmtKB,
+  fmtPercent,
+  type CompressOptions,
+  type FileResult,
+  type TargetFormat,
+} from "./lib/pipeline.js";
 import { PRESETS, parseSize } from "./lib/presets.js";
 import type { ResizeMode, ResizeSpec } from "./lib/imageops.js";
 import { getSettings, lastResizeState, rememberCompress, rememberResize } from "./lib/settings.js";
@@ -38,9 +54,7 @@ export default function Command(): ReactElement {
   useEffect(() => {
     (async () => {
       try {
-        const sel = (await getSelectedFinderItems())
-          .map((f) => f.path)
-          .filter((f) => IMG_RE.test(f));
+        const sel = (await getSelectedFinderItems()).map((f) => f.path).filter((f) => IMG_RE.test(f));
         if (sel.length > 0) setFiles(sel);
       } catch {
         // no selection — the FilePicker below is the fallback

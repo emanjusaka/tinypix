@@ -88,8 +88,7 @@ async function convertToPng(input: string, tmpDir: string): Promise<Buffer | nul
   }
 }
 
-const abOf = (b: Buffer): ArrayBuffer =>
-  b.buffer.slice(b.byteOffset, b.byteOffset + b.length) as ArrayBuffer;
+const abOf = (b: Buffer): ArrayBuffer => b.buffer.slice(b.byteOffset, b.byteOffset + b.length) as ArrayBuffer;
 
 /**
  * Human-readable reason for a source we cannot decode. Magic bytes identify the
@@ -165,12 +164,20 @@ function pngPaletteLimited(b: Uint8Array): boolean {
   return false;
 }
 
-function outputFor(input: string, targetExt: string, mode: OutputMode, tmpDir: string, suffix = "min"): { path: string; replace: boolean } {
+function outputFor(
+  input: string,
+  targetExt: string,
+  mode: OutputMode,
+  tmpDir: string,
+  suffix = "min",
+): { path: string; replace: boolean } {
   const dir = dirname(input);
   const base = basename(input, extname(input));
-  if (mode === "clipboard") return { path: join(tmpDir, `${base}-${suffix}-${randomUUID()}.${targetExt}`), replace: false };
+  if (mode === "clipboard")
+    return { path: join(tmpDir, `${base}-${suffix}-${randomUUID()}.${targetExt}`), replace: false };
   if (mode === "replace") {
-    const sameExt = extname(input).slice(1).toLowerCase() === targetExt ||
+    const sameExt =
+      extname(input).slice(1).toLowerCase() === targetExt ||
       (targetExt === "jpg" && extname(input).slice(1).toLowerCase() === "jpeg");
     return sameExt ? { path: input, replace: true } : { path: join(dir, `${base}.${targetExt}`), replace: false };
   }
@@ -196,7 +203,9 @@ export async function compressFile(
       } else if (fmt === "unsupported") {
         throw new Error(describeUnsupported(inBuf));
       } else {
-        throw new Error("CMYK JPEG not supported — re-save as RGB/sRGB first (Photoshop → Mode → RGB, or export from the original)");
+        throw new Error(
+          "CMYK JPEG not supported — re-save as RGB/sRGB first (Photoshop → Mode → RGB, or export from the original)",
+        );
       }
     }
 

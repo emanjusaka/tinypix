@@ -12,8 +12,22 @@ export interface Preset {
 
 export const PRESETS: Preset[] = [
   { key: "og", group: "Blog", label: "OG / Link Cover 1200×630", width: 1200, height: 630, mode: "cover" },
-  { key: "blog-cover", group: "Blog", label: "Blog Cover 1600×900 (Hi-Res 16:9)", width: 1600, height: 900, mode: "cover" },
-  { key: "blog-cover-s", group: "Blog", label: "Blog Cover 1200×675 (Lean 16:9)", width: 1200, height: 675, mode: "cover" },
+  {
+    key: "blog-cover",
+    group: "Blog",
+    label: "Blog Cover 1600×900 (Hi-Res 16:9)",
+    width: 1600,
+    height: 900,
+    mode: "cover",
+  },
+  {
+    key: "blog-cover-s",
+    group: "Blog",
+    label: "Blog Cover 1200×675 (Lean 16:9)",
+    width: 1200,
+    height: 675,
+    mode: "cover",
+  },
   { key: "blog-wide", group: "Blog", label: "Content Width 1600 (Height Auto)", width: 1600, height: 0, mode: "scale" },
   { key: "xhs-34", group: "Xiaohongshu", label: "Cover 3:4 1080×1440", width: 1080, height: 1440, mode: "cover" },
   { key: "xhs-11", group: "Xiaohongshu", label: "Square 1:1 1080×1080", width: 1080, height: 1080, mode: "cover" },

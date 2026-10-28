@@ -15,21 +15,17 @@ import type { RawImage } from "./codecs.js";
 
 /** Narrow typed view of the vendored module (its exports are attached by mutation). */
 interface UPNGModule {
-  quantize(abuf: ArrayBuffer, ps: number, doKmeans?: boolean): {
+  quantize(
+    abuf: ArrayBuffer,
+    ps: number,
+    doKmeans?: boolean,
+  ): {
     abuf: ArrayBuffer;
     inds: Uint8Array;
     plte: { est: { rgba: number } }[];
   };
   encode: {
-    dither(
-      sb: Uint8Array,
-      w: number,
-      h: number,
-      plte: number[],
-      tb: Uint8Array,
-      oind: Uint8Array,
-      mtd?: number,
-    ): void;
+    dither(sb: Uint8Array, w: number, h: number, plte: number[], tb: Uint8Array, oind: Uint8Array, mtd?: number): void;
   };
 }
 const upng = UPNG as unknown as UPNGModule;
@@ -54,9 +50,7 @@ export function quantizeImage(image: RawImage, maxColors: number, ditherMode: Di
 
   // UPNG.quantize expects one standalone ArrayBuffer of RGBA bytes.
   const abuf = (
-    data.byteOffset === 0 && data.byteLength === data.buffer.byteLength
-      ? data.buffer
-      : data.slice().buffer
+    data.byteOffset === 0 && data.byteLength === data.buffer.byteLength ? data.buffer : data.slice().buffer
   ) as ArrayBuffer;
 
   const qres = upng.quantize(abuf, K);
