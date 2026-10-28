@@ -20,15 +20,20 @@ One form for everything the picker-based workflow needs: exact-size output for p
 2. Pick the **Output Format** — `Keep` (same format as source) or convert to `JPEG` / `PNG` / `WebP` / `AVIF`.
 3. Choose a preset — blog OG cover `1200×630`, blog cover `1600×900` (Retina) / `1200×675` (lean), content width `1600`; Xiaohongshu 3:4 `1080×1440` / square `1080×1080`; WeChat head cover `900×383` / thumbnail `200×200` / body width `1080` — or `Compress Only` (no resize, longest-side cap applies, files get the `-min` suffix) or `Custom Size…` (`1080x1440`, `1080x`).
 4. Pick a fit mode: **cover** (fill the box, center-crop to the exact size), **fit** (shrink inside the box, whole image kept), or **scale** (resize by one side).
-5. Output names carry the final size, e.g. `photo-1080x1440.jpg`.
+5. Choose the **Output** — new `-min` file, replace the original, or copy to the clipboard.
+6. Output names carry the final size, e.g. `photo-1080x1440.jpg`.
+
+Every output setting (format, quality, output mode, last preset / size / fit mode) lives on this one form; the preferences page only supplies first-install defaults.
 
 Images are never upscaled: sources too small to fill a `cover` target are kept whole (fit) and reported (`N smaller than preset`).
 
 ## Remembered settings
 
-Every run remembers the parameters it used (output format, quality, max dimension, last preset / size / fit mode) and they become the defaults for the next run — forms open pre-filled with your last values. The optional `quality` / `format` launch arguments on **Compress Images** are one-shot overrides that also get remembered; output mode lives in the extension preferences.
+Every run remembers the parameters it used (output format, quality, max dimension, output mode, last preset / size / fit mode) and they become the defaults for the next run — forms open pre-filled with your last values. The optional `quality` / `format` launch arguments on **Compress Images** are one-shot overrides that also get remembered. Output mode set on the Resize form applies to **Compress Images** as well, so it never needs a trip to the preferences page.
 
 ## Preferences
+
+Preferences only supply first-install defaults; after your first run, the remembered values from either command take precedence.
 
 | Preference | Default | Description |
 | --- | --- | --- |

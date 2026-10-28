@@ -12,4 +12,4 @@
 - EXIF orientation baked in and Lanczos3 resampling, both in-process (no child processes)
 - Never upscales; cover falls back to fit when the source is smaller than the preset
 - Last-used quality / size / mode remembered across runs
-- Output options: `-min` suffix, replace original, or copy to clipboard
+- Output options: `-min` suffix, replace original, or copy to clipboard — all three now on the Resize Images form, and the choice is shared with Compress Images

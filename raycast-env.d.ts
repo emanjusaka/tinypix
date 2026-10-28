@@ -14,7 +14,7 @@ type ExtensionPreferences = {
   "quality": string,
   /** Longest Side - Longest side in px; images are only scaled down. 0 = keep size */
   "maxDim": string,
-  /** Output - Where compressed results go */
+  /** Output - Initial default only — the output choice made in the Resize form is remembered and applies to Compress Images too */
   "output": "suffix" | "replace" | "clipboard"
 }
 
