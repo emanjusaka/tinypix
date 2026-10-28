@@ -15,9 +15,8 @@ import { join } from "node:path";
 if (typeof globalThis.ImageData === "undefined") {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (globalThis as any).ImageData = class ImageData {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     constructor(
-      public data: any,
+      public data: Uint8ClampedArray,
       public width: number,
       public height: number,
     ) {}
