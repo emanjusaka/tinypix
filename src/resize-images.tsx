@@ -23,6 +23,7 @@ import {
   fmtPercent,
   type CompressOptions,
   type FileResult,
+  type OutputMode,
   type TargetFormat,
 } from "./lib/pipeline.js";
 import { PRESETS, parseSize } from "./lib/presets.js";
@@ -39,6 +40,12 @@ const FORMAT_ITEMS: Array<{ value: TargetFormat; title: string }> = [
   { value: "avif", title: "AVIF" },
 ];
 
+const OUTPUT_ITEMS: Array<{ value: OutputMode; title: string }> = [
+  { value: "suffix", title: "New File With Suffix (photo → photo-min.jpg)" },
+  { value: "replace", title: "Replace Original File" },
+  { value: "clipboard", title: "Copy to Clipboard" },
+];
+
 export default function Command(): ReactElement {
   const settings = getSettings();
   const last = lastResizeState();
@@ -49,6 +56,7 @@ export default function Command(): ReactElement {
   const [format, setFormat] = useState<TargetFormat>(settings.format);
   const [quality, setQuality] = useState(String(settings.quality));
   const [maxDim, setMaxDim] = useState(String(settings.maxDim));
+  const [output, setOutput] = useState<OutputMode>(settings.output);
 
   // Prefill from the current Finder / File Explorer selection.
   useEffect(() => {
@@ -90,7 +98,7 @@ export default function Command(): ReactElement {
       format,
       quality: q,
       maxDim: md,
-      output: settings.output,
+      output,
       ...(spec ? { resize: spec } : {}),
     };
 
@@ -113,8 +121,8 @@ export default function Command(): ReactElement {
       for (const r of ok) if (r.output) await Clipboard.copy({ file: r.output });
     }
     if (ok.length > 0) {
-      if (compressOnly) rememberCompress(format, q, md);
-      else rememberResize(preset, size, mode, format, q);
+      if (compressOnly) rememberCompress(format, q, md, output);
+      else rememberResize(preset, size, mode, format, q, output);
     }
     await rm(tmpDir, { recursive: true, force: true });
     toast.hide();
@@ -213,6 +221,17 @@ export default function Command(): ReactElement {
         ))}
       </Form.Dropdown>
       <Form.TextField id="quality" title="Quality (1-100)" value={quality} onChange={setQuality} />
+      <Form.Dropdown
+        id="output"
+        title="Output"
+        value={output}
+        onChange={(v) => setOutput(v as OutputMode)}
+        info="Remembered for Compress Images too"
+      >
+        {OUTPUT_ITEMS.map((o) => (
+          <Form.Dropdown.Item key={o.value} value={o.value} title={o.title} />
+        ))}
+      </Form.Dropdown>
     </Form>
   );
 }

@@ -70,7 +70,7 @@ export default async function main(
   if (opts.output === "clipboard") {
     for (const r of ok) if (r.output) await Clipboard.copy({ file: r.output });
   }
-  if (ok.length > 0) rememberCompress(opts.format, opts.quality, opts.maxDim);
+  if (ok.length > 0) rememberCompress(opts.format, opts.quality, opts.maxDim, opts.output);
   await rm(tmpDir, { recursive: true, force: true });
 
   toast.hide();

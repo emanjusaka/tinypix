@@ -3,7 +3,8 @@
  * Cache, persisted), and every command opens with those values next time —
  * no settings page needed. Resolution order per run:
  *   launch argument (one-shot) > last-used > extension preferences (defaults).
- * output is a stable choice and lives only in preferences.
+ * Preferences are the first-install defaults; after the first run the form's
+ * own choices (format, quality, max dimension, output mode) take over.
  */
 import { Cache, getPreferenceValues } from "@raycast/api";
 import type { TargetFormat, OutputMode } from "./pipeline.js";
@@ -28,6 +29,7 @@ interface LastUsed {
   format?: TargetFormat;
   quality?: number;
   maxDim?: number;
+  output?: OutputMode;
   preset?: string;
   mode?: ResizeMode;
   size?: string;
@@ -58,12 +60,12 @@ function put(v: LastUsed): void {
   cache.set(KEY, JSON.stringify(v));
 }
 
-/** Compress runs (Compress Images, or Resize Images in 仅压缩 mode) remember format + quality + maxDim. */
-export function rememberCompress(format: TargetFormat, quality: number, maxDim: number): void {
-  put({ ...getLast(), format, quality, maxDim });
+/** Compress runs (Compress Images, or Resize Images in 仅压缩 mode) remember format + quality + maxDim + output. */
+export function rememberCompress(format: TargetFormat, quality: number, maxDim: number, output: OutputMode): void {
+  put({ ...getLast(), format, quality, maxDim, output });
 }
 
-/** Resize runs remember their form state (preset / custom size / mode / format / quality).
+/** Resize runs remember their form state (preset / custom size / mode / format / quality / output).
  *  maxDim is untouched: resize bypasses it, so the plain-compress value stays. */
 export function rememberResize(
   preset: string,
@@ -71,8 +73,9 @@ export function rememberResize(
   mode: ResizeMode,
   format: TargetFormat,
   quality: number,
+  output: OutputMode,
 ): void {
-  put({ ...getLast(), preset, size, mode, format, quality });
+  put({ ...getLast(), preset, size, mode, format, quality, output });
 }
 
 /** Resize form initial state (falls back to defaults on first run or a stale preset key). */
@@ -83,7 +86,7 @@ export function lastResizeState(): { preset: string; size: string; mode: ResizeM
   return { preset, size: last.size ?? "", mode: last.mode ?? "cover" };
 }
 
-/** Resolve effective compress settings: last-used format/quality/maxDim ?? preferences. */
+/** Resolve effective settings: last-used (from either command) ?? preferences. */
 export function getSettings(): EffectiveSettings {
   const prefs = getPreferenceValues<Prefs>();
   const last = getLast();
@@ -92,6 +95,7 @@ export function getSettings(): EffectiveSettings {
       ? (last.format as TargetFormat)
       : undefined;
   const prefFormat = FORMATS.includes(prefs.format as TargetFormat) ? (prefs.format as TargetFormat) : undefined;
+  const lastOutput = last.output !== undefined && OUTPUTS.includes(last.output) ? last.output : undefined;
   return {
     format: lastFormat ?? prefFormat ?? "keep",
     quality:
@@ -102,6 +106,6 @@ export function getSettings(): EffectiveSettings {
       typeof last.maxDim === "number"
         ? Math.max(0, Math.round(last.maxDim))
         : Math.max(0, Number.parseInt(prefs.maxDim, 10) || 0),
-    output: OUTPUTS.includes(prefs.output as OutputMode) ? (prefs.output as OutputMode) : "suffix",
+    output: lastOutput ?? (OUTPUTS.includes(prefs.output as OutputMode) ? (prefs.output as OutputMode) : "suffix"),
   };
 }
