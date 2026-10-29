@@ -4,6 +4,8 @@ Resize and compress images in [Raycast](https://raycast.com), straight from the 
 
 Powered by the same WebAssembly codecs as [Squoosh](https://squoosh.app) (via [jSquash](https://github.com/jamsinclair/jSquash)): MozJPEG, OxiPNG, libwebp and libaom. Resizing (Lanczos3) and EXIF orientation run in-process. No API keys, no uploads — nothing leaves your machine.
 
+English | [简体中文](./README.zh-CN.md)
+
 ## Features
 
 - **Two entry points** — a zero-UI hotkey run over the selection, or a form when you need exact dimensions.
