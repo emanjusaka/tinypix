@@ -1,64 +1,106 @@
 # TinyPix
 
-A [Raycast](https://raycast.com) extension that shrinks images — resize dimensions and recompress in one step, fully offline, powered by the same WebAssembly codecs as [Squoosh](https://squoosh.app) (via [jSquash](https://github.com/jamsinclair/jSquash): MozJPEG, Oxipng, WebP, AVIF). Resizing (Lanczos3) and EXIF orientation run in-process. Native formats: JPEG, PNG, WebP, AVIF. [TinyPNG](https://tinypng.com) covers the same four plus JPEG XL and APNG, which jSquash ships no codecs for, so those stay out of scope; animated inputs (GIF, APNG) are flattened to their first frame. On macOS, anything else the system can read (BMP, TIFF, HEIC/HEIF, CMYK JPEG) is converted to PNG through `sips` as a best-effort extra; on Windows those report a clear "not supported" message.
+Resize and compress images in [Raycast](https://raycast.com), straight from the current Finder or File Explorer selection — fully offline.
 
-No API keys, no uploads — everything runs locally. Selection is read via the official `getSelectedFinderItems()` API, so the same code works on macOS and Windows.
+Powered by the same WebAssembly codecs as [Squoosh](https://squoosh.app) (via [jSquash](https://github.com/jamsinclair/jSquash)): MozJPEG, OxiPNG, libwebp and libaom. Resizing (Lanczos3) and EXIF orientation run in-process. No API keys, no uploads — nothing leaves your machine.
+
+## Features
+
+- **Two entry points** — a zero-UI hotkey run over the selection, or a form when you need exact dimensions.
+- **Platform presets** — blog covers, Xiaohongshu 3:4 and 1:1, WeChat head covers and thumbnails.
+- **Format conversion** — keep the source format, or convert to JPEG, PNG, WebP or AVIF.
+- **Lossy or lossless PNG** — quality below 100 quantizes to a palette, 100 stays lossless.
+- **Never upscales** — sources too small for a cover target are kept whole and reported.
+- **Remembers everything** — each run becomes the default for the next one.
+- **macOS and Windows** — selection is read through the official `getSelectedFinderItems()` API.
+
+## Supported formats
+
+Native: **JPEG, PNG, WebP, AVIF**.
+
+[TinyPNG](https://tinypng.com) additionally accepts JPEG XL and APNG; jSquash ships no codecs for those, so they stay out of scope, and animated inputs (GIF, APNG) are flattened to their first frame.
+
+On macOS, anything else the system can read — BMP, TIFF, HEIC/HEIF, CMYK JPEG — is converted to PNG through `sips` first (mislabelled files are caught by magic bytes). On Windows those report a clear "not supported" message.
 
 ## Commands
 
-### Compress Images (file-manager selection)
+### Compress Images
 
-1. Select image files in Finder (macOS) or File Explorer (Windows).
-2. Run **Compress Images** (optional arguments: `quality` and `format` for a one-shot override, e.g. `75 webp`).
-3. Each file is resized (if larger than Max Dimension) and recompressed; a HUD shows the total savings, e.g. `3 files: 4.2MB → 890KB (-79%)`.
+Zero-UI run over the current Finder / File Explorer selection.
 
-### Resize Images (form)
+1. Select image files.
+2. Run **Compress Images**. Optional launch arguments override the remembered settings for one run: `75 webp` means quality 75, converted to WebP.
+3. Each file is capped at the Max Dimension and recompressed; a HUD reports the total, e.g. `3 files: 4.2MB → 890KB (-79%)`.
 
-One form for everything the picker-based workflow needs: exact-size output for platform cover slots, or plain compression.
+### Resize Images
 
-1. The form is prefilled with your current selection (or pick files manually).
-2. Pick the **Output Format** — `Keep` (same format as source) or convert to `JPEG` / `PNG` / `WebP` / `AVIF`.
-3. Choose a preset — blog OG cover `1200×630`, blog cover `1600×900` (Retina) / `1200×675` (lean), content width `1600`; Xiaohongshu 3:4 `1080×1440` / square `1080×1080`; WeChat head cover `900×383` / thumbnail `200×200` / body width `1080` — or `Compress Only` (no resize, longest-side cap applies, files get the `-min` suffix) or `Custom Size…` (`1080x1440`, `1080x`).
-4. Pick a fit mode: **cover** (fill the box, center-crop to the exact size), **fit** (shrink inside the box, whole image kept), or **scale** (resize by one side).
-5. Choose the **Output** — new `-min` file, replace the original, or copy to the clipboard.
-6. Output names carry the final size, e.g. `photo-1080x1440.jpg`.
+One form covering everything the picker-based workflow needs: exact sizes for platform slots, or plain compression.
 
-Every output setting (format, quality, output mode, last preset / size / fit mode) lives on this one form; the preferences page only supplies first-install defaults.
+1. The file list is prefilled with your current selection; add or replace files in the form.
+2. Pick an **Output Format** — `Keep` (same as source), `JPEG`, `PNG`, `WebP` or `AVIF`.
+3. Choose a preset, `Compress Only` or a custom size.
+4. Pick a fit mode — **cover** (fill the box, center-crop to exact size), **fit** (shrink inside the box, keep the whole image) or **scale** (resize by one side).
+5. Choose the **Output** — a new `-min` file, replace the original, or copy to the clipboard.
+6. Resized output names carry the final size, e.g. `photo-1080x1440.jpg`.
 
-Images are never upscaled: sources too small to fill a `cover` target are kept whole (fit) and reported (`N smaller than preset`).
+Every output setting — format, quality, size, output mode — lives on this one form. The preferences page only supplies first-install defaults.
+
+#### Presets
+
+| Group | Preset | Size | Mode |
+| --- | --- | --- | --- |
+| Blog | OG / link cover | 1200×630 | cover |
+| Blog | Cover, Retina | 1600×900 | cover |
+| Blog | Cover, lean | 1200×675 | cover |
+| Blog | Content width | 1600 × auto | scale |
+| Xiaohongshu | Cover 3:4 | 1080×1440 | cover |
+| Xiaohongshu | Square | 1080×1080 | cover |
+| WeChat | Head cover 2.35:1 | 900×383 | cover |
+| WeChat | Thumbnail | 200×200 | cover |
+| WeChat | Body width | 1080 × auto | fit |
+
+`Compress Only` skips resizing, applies the longest-side cap and writes the `-min` suffix. `Custom Size…` takes `1080x1440` or `1080x` (width only).
+
+Images are never upscaled: a source too small to fill a `cover` target is kept whole (fit) and reported as `N smaller than preset`.
 
 ## Remembered settings
 
-Every run remembers the parameters it used (output format, quality, max dimension, output mode, last preset / size / fit mode) and they become the defaults for the next run — forms open pre-filled with your last values. The optional `quality` / `format` launch arguments on **Compress Images** are one-shot overrides that also get remembered. Output mode set on the Resize form applies to **Compress Images** as well, so it never needs a trip to the preferences page.
+Every run remembers the parameters it used — output format, quality, max dimension, output mode, and the last preset / size / fit mode — and they become the defaults next time. Forms open pre-filled with your last values.
+
+The optional `quality` / `format` launch arguments on **Compress Images** are one-shot overrides that also get remembered. Output mode chosen on the Resize form applies to **Compress Images** too, so it never needs a trip to the preferences page.
 
 ## Preferences
 
-Preferences only supply first-install defaults; after your first run, the remembered values from either command take precedence.
+Preferences supply first-install defaults only; after the first run, remembered values take precedence.
 
 | Preference | Default | Description |
 | --- | --- | --- |
-| Output Format | Keep | `Keep` (recompress in-place format), `JPEG`, `WebP`, `AVIF`, `PNG` — initial default; per-run overrides are remembered |
-| Quality | 75 | Encoder quality 0–100. For PNG it maps to palette size: below 100 quantizes to fewer colors, 100 = lossless |
-| Max Dimension | 2000 | Longest side cap; images are only ever scaled **down** (0 = no resize) |
-| Output Mode | Suffix | `Suffix` writes `<name>-min.<ext>`, `Replace` overwrites in place (skips if no gain), `Clipboard` copies the result |
+| Output Format | Keep | `Keep` (recompress in the source format), `JPEG`, `WebP`, `AVIF`, `PNG` |
+| Quality | 75 | Encoder quality 0–100. For PNG this maps to palette size: below 100 quantizes, 100 is lossless |
+| Max Dimension | 2000 | Longest-side cap; images are only ever scaled **down** (0 = no resize) |
+| Output Mode | Suffix | `Suffix` writes `<name>-min.<ext>`, `Replace` overwrites in place (skips when there is no gain), `Clipboard` copies the result |
 
 ## Format behaviour
 
-- **JPEG / WebP / AVIF** — encoded by Squoosh wasm codecs (MozJPEG / libwebp / libaom) with the chosen quality.
-- **PNG** — at quality < 100, colors are quantized to a palette (≈ quality × 2.56 colors, no dithering) and the result is optimised by Oxipng into an indexed PNG; at quality 100 it stays **lossless** (pure Oxipng optimisation).
-- EXIF orientation is baked into the pixels before encoding, so rotated iPhone photos come out upright.
-- **Anything macOS can read** — BMP, TIFF, HEIC/HEIF, GIF (first frame) and CMYK JPEG are converted to PNG via `sips` before compression (a mislabelled file, e.g. a BMP named `.png`, is detected by magic bytes). Without `sips` (non-macOS) these fall back to a clear error message.
+- **JPEG / WebP / AVIF** — encoded by the Squoosh wasm codecs (MozJPEG / libwebp / libaom) at the chosen quality.
+- **PNG** — at quality < 100, colours are quantized to a palette (≈ quality × 2.56 colours, no dithering) and optimised by OxiPNG into an indexed PNG; at quality 100 it stays **lossless** (pure OxiPNG optimisation).
+- **EXIF orientation** is baked into the pixels before encoding, so rotated phone photos come out upright.
+- **Other inputs on macOS** — BMP, TIFF, HEIC/HEIF, GIF (first frame) and CMYK JPEG go through `sips` to PNG before compression.
 
 ## Development
 
 ```bash
-npm install    # also copies wasm codecs into assets/codecs (postinstall)
-npm run typecheck
-npm test       # esbuild-bundles the pipeline and runs 15 end-to-end cases
+npm install    # also packs the wasm codecs into assets/codecs (postinstall)
 npm run dev    # open in Raycast
+npm run build  # production build
+npm run lint   # ESLint + Prettier, via ray lint
+npm run typecheck
+npm test       # 17 end-to-end cases through the real pipeline
 ```
 
-The test harness generates sample images (via Pillow), bundles `scripts/test-main.ts` with the same esbuild settings Raycast uses, and exercises every format/route/output-mode path plus all resize modes (exact dims, size-suffixed names, cover→fit fallback). `applyResize` was additionally verified pixel-for-pixel against PIL's LANCZOS (`resize`, `ImageOps.fit`).
+The first `npm install` Brotli-packs nine wasm binaries, which takes about ten seconds; the packer keeps a stamp of its sources and settings and short-circuits on later runs until either changes. Codecs are stored compressed because the raw set is 5.9 MB and packs to 1.5 MB; they are decompressed lazily, only for the formats a given run touches.
+
+The test harness generates sample images (via Pillow), bundles `scripts/test-main.ts` with the same esbuild settings Raycast uses, and exercises every format, route and output mode plus all resize modes (exact dimensions, size-suffixed names, cover→fit fallback). `applyResize` was additionally verified pixel-for-pixel against PIL's LANCZOS (`resize`, `ImageOps.fit`).
 
 ## License
 
